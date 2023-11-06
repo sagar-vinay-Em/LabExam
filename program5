@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_CHAR 256
+
+// Define a node structure for the suffix tree
+struct SuffixTreeNode {
+    struct SuffixTreeNode* children[MAX_CHAR];
+};
+
+typedef struct SuffixTreeNode SuffixTreeNode;
+
+// Create a new SuffixTreeNode
+SuffixTreeNode* createNode() {
+    SuffixTreeNode* node = (SuffixTreeNode*)malloc(sizeof(SuffixTreeNode));
+    for (int i = 0; i < MAX_CHAR; i++) {
+        node->children[i] = NULL;
+    }
+    return node;
+}
+
+// Insert a suffix into the suffix tree
+void insertSuffix(SuffixTreeNode* root, const char* suffix) {
+    SuffixTreeNode* currentNode = root;
+    for (int i = 0; i < strlen(suffix); i++) {
+        int index = suffix[i];
+        if (!currentNode->children[index]) {
+            currentNode->children[index] = createNode();
+        }
+        currentNode = currentNode->children[index];
+    }
+}
+
+// Search for a suffix in the suffix tree
+int searchSuffix(SuffixTreeNode* root, const char* suffix) {
+    SuffixTreeNode* currentNode = root;
+    for (int i = 0; i < strlen(suffix); i++) {
+        int index = suffix[i];
+        if (!currentNode->children[index]) {
+            return 0; // Suffix not found
+        }
+        currentNode = currentNode->children[index];
+    }
+    return 1; // Suffix found
+}
+
+int main() {
+    const char* text = "AssassinsCreed";
+    SuffixTreeNode* root = createNode();
+
+    // Build the suffix tree by inserting all suffixes
+    for (int i = 0; i < strlen(text); i++) {
+        insertSuffix(root, text + i);
+    }
+
+    // Search for suffixes
+    printf("Search results:\n");
+    printf("Does 'ssassi' exist in the tree? %s\n", searchSuffix(root, "ssassi") ? "Yes" : "No");
+    printf("Does 'Assasin' exist in the tree? %s\n", searchSuffix(root, "Assasin ") ? "Yes" : "No");
+    printf("Does 'Creed' exist in the tree? %s\n", searchSuffix(root, "Creed") ? "Yes" : "No");
+
+    // Free the memory allocated for the tree
+    free(root);
+
+    return 0;
+}

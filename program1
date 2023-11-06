@@ -1,0 +1,122 @@
+Name - Vinay
+Roll no - BT22CSE041
+
+Splay Tree:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Splay Tree Node structure
+struct Node {
+    char key;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Function to create a new node
+struct Node* newNode(char key) {
+    struct Node* node = (struct Node*)malloc(sizeof(struct Node));
+    node->key = key;
+    node->left = node->right = NULL;
+    return node;
+}
+
+// Function to rotate a tree right
+struct Node* rightRotate(struct Node* x) {
+    struct Node* y = x->left;
+    x->left = y->right;
+    y->right = x;
+    return y;
+}
+
+// Function to rotate a tree left
+struct Node* leftRotate(struct Node* x) {
+    struct Node* y = x->right;
+    x->right = y->left;
+    y->left = x;
+    return y;
+}
+
+// Function to perform a splay operation
+struct Node* splay(struct Node* root, char key) {
+    if (root == NULL || root->key == key)
+        return root;
+
+    if (key < root->key) {
+        if (root->left == NULL)
+            return root;
+
+        if (key < root->left->key) {
+            root->left->left = splay(root->left->left, key);
+            root = rightRotate(root);
+        } else if (key > root->left->key) {
+            root->left->right = splay(root->left->right, key);
+            if (root->left->right != NULL)
+                root->left = leftRotate(root->left);
+        }
+
+        return (root->left == NULL) ? root : rightRotate(root);
+    } else {
+        if (root->right == NULL)
+            return root;
+
+        if (key < root->right->key) {
+            root->right->left = splay(root->right->left, key);
+            if (root->right->left != NULL)
+                root->right = rightRotate(root->right);
+        } else if (key > root->right->key) {
+            root->right->right = splay(root->right->right, key);
+            root = leftRotate(root);
+        }
+
+        return (root->right == NULL) ? root : leftRotate(root);
+    }
+}
+
+// Function to insert a key into the splay tree
+struct Node* insert(struct Node* root, char key) {
+    if (root == NULL)
+        return newNode(key);
+
+    root = splay(root, key);
+
+    if (key == root->key)
+        return root;
+
+    struct Node* new_node = newNode(key);
+
+    if (key < root->key) {
+        new_node->right = root;
+        new_node->left = root->left;
+        root->left = NULL;
+    } else {
+        new_node->left = root;
+        new_node->right = root->right;
+        root->right = NULL;
+    }
+
+    return new_node;
+}
+
+// In-order traversal to display the splay tree
+void inOrder(struct Node* root) {
+    if (root != NULL) {
+        inOrder(root->left);
+        printf("%c ", root->key);
+        inOrder(root->right);
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    char keys[] = {'F', 'S', 'Q', 'K', 'C', 'L', 'H', 'T', 'V', 'W', 'M', 'R', 'N', 'P', 'A', 'B', 'X', 'Y', 'D', 'Z', 'E'};
+
+    for (int i = 0; i < 21; i++) {
+        root = insert(root, keys[i]);
+    }
+
+    printf("In-order traversal of the splay tree: ");
+    inOrder(root);
+
+    return 0;
+}

@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define ALPHABET_SIZE 26
+
+// Trie Node
+struct TrieNode {
+    struct TrieNode* children[ALPHABET_SIZE];
+    int isEndOfWord;
+};
+
+// Function to create a new Trie Node
+struct TrieNode* createTrieNode() {
+    struct TrieNode* newNode = (struct TrieNode*)malloc(sizeof(struct TrieNode));
+    if (newNode) {
+        newNode->isEndOfWord = 0;
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            newNode->children[i] = NULL;
+        }
+    }
+    return newNode;
+}
+
+// Function to insert a word into the Trie
+void trieInsert(struct TrieNode* root, const char* word) {
+    struct TrieNode* node = root;
+    int length = strlen(word);
+
+    for (int level = 0; level < length; level++) {
+        int index = word[level] - 'a';
+
+        if (!node->children[index]) {
+            node->children[index] = createTrieNode();
+        }
+
+        node = node->children[index];
+    }
+
+    node->isEndOfWord = 1; // Mark the end of the word
+}
+
+// Function to search for a word in the Trie
+int trieSearch(struct TrieNode* root, const char* word) {
+    struct TrieNode* node = root;
+    int length = strlen(word);
+
+    for (int level = 0; level < length; level++) {
+        int index = word[level] - 'a';
+
+        if (!node->children[index]) {
+            return 0; // Word is not present in the Trie
+        }
+
+        node = node->children[index];
+    }
+
+    return (node != NULL && node->isEndOfWord);
+}
+
+// Helper function to check if a TrieNode has no children
+int isNodeEmpty(struct TrieNode* node) {
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        if (node->children[i] != NULL) {
+            return 0; // Node has children
+        }
+    }
+    return 1; // Node has no children
+}
+
+// Recursive function to delete a word from the Trie
+struct TrieNode* trieDelete(struct TrieNode* root, const char* word, int depth) {
+    if (root == NULL) {
+        return NULL; // Word not found
+    }
+
+    // Base case: if all characters of the word have been processed
+    if (depth == strlen(word)) {
+        if (root->isEndOfWord) {
+            root->isEndOfWord = 0; // Unmark the end of the word
+        }
+
+        // If the current node has no other children, it can be deleted
+        if (isNodeEmpty(root)) {
+            free(root);
+            root = NULL;
+        }
+
+        return root;
+    }
+
+    // Recursively delete the word in a bottom-up manner
+    int index = word[depth] - 'a';
+    root->children[index] = trieDelete(root->children[index], word, depth + 1);
+
+    // If the current node has no other children and is not the end of another word, it can be deleted
+    if (isNodeEmpty(root) && root->isEndOfWord == 0) {
+        free(root);
+        root = NULL;
+    }
+
+    return root;
+}
+
+int main() {
+    const char* words[] = {"apple", "banana", "cherry", "date", "dog", "elephant", "zebra"};
+    int numWords = sizeof(words) / sizeof(words[0]);
+
+    struct TrieNode* trieRoot = createTrieNode();
+
+    // Insert words into the Trie
+    for (int i = 0; i < numWords; i++) {
+        trieInsert(trieRoot, words[i]);
+    }
+
+    // Search for specific words in the Trie
+    printf("Before Deletion:\n");
+    printf("banana: %s\n", trieSearch(trieRoot, "banana") ? "found" : "not found");
+    printf("banana: %s\n", trieSearch(trieRoot, "cherry") ? "found" : "not found");
+    printf("banana: %s\n", trieSearch(trieRoot, "elephant") ? "found" : "not found");
+    printf("cat: %s\n", trieSearch(trieRoot, "cat") ? "found" : "not found");
+
+    // Delete a word from the Trie
+    trieRoot = trieDelete(trieRoot, "banana", 0);
+    trieRoot = trieDelete(trieRoot, "cherry", 0);
+    trieRoot = trieDelete(trieRoot, "elephant", 0);
+
+    printf("\nAfter Deletion of banana cherry elephant :\n");
+    printf("banana: %s\n", trieSearch(trieRoot, "banana") ? "found" : "not found");
+    printf("banana: %s\n", trieSearch(trieRoot, "cherry") ? "found" : "not found");
+    printf("banana: %s\n", trieSearch(trieRoot, "elephant") ? "found" : "not found");
+    printf("cat: %s\n", trieSearch(trieRoot, "cat") ? "found" : "not found");
+
+    return 0;
+}

@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define ALPHABET_SIZE 26
+
+// Trie Node
+struct TrieNode {
+    struct TrieNode* children[ALPHABET_SIZE];
+    int isEndOfWord;
+};
+
+// Function to create a new Trie Node
+struct TrieNode* createTrieNode() {
+    struct TrieNode* newNode = (struct TrieNode*)malloc(sizeof(struct TrieNode));
+    if (newNode) {
+        newNode->isEndOfWord = 0;
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            newNode->children[i] = NULL;
+        }
+    }
+    return newNode;
+}
+
+// Function to insert a word into the Trie
+void trieInsert(struct TrieNode* root, const char* word) {
+    struct TrieNode* node = root;
+    int length = strlen(word);
+
+    for (int level = 0; level < length; level++) {
+        int index = word[level] - 'a';
+
+        if (!node->children[index]) {
+            node->children[index] = createTrieNode();
+        }
+
+        node = node->children[index];
+    }
+
+    node->isEndOfWord = 1; // Mark the end of the word
+}
+
+// Function to find autocomplete suggestions for a given prefix
+void autocomplete(struct TrieNode* root, const char* prefix, char* currentWord, int depth) {
+    if (root == NULL) {
+        return;
+    }
+
+    if (root->isEndOfWord) {
+        currentWord[depth] = '\0';
+        printf("%s%s\n", prefix, currentWord);
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        if (root->children[i]) {
+            currentWord[depth] = i + 'a';
+            autocomplete(root->children[i], prefix, currentWord, depth + 1);
+        }
+    }
+}
+
+int main() {
+    const char* words[] = {"apple", "appetite", "alligator", "allignment", "assassin", "assurance", "creed"};
+    int numWords = sizeof(words) / sizeof(words[0]);
+
+    struct TrieNode* trieRoot = createTrieNode();
+
+    // Insert words into the Trie
+    for (int i = 0; i < numWords; i++) {
+        trieInsert(trieRoot, words[i]);
+    }
+
+    printf("Enter a prefix: ");
+    char prefix[100];
+    scanf("%s", prefix);
+
+    struct TrieNode* currentNode = trieRoot;
+    int length = strlen(prefix);
+    int i;
+    for (i = 0; i < length; i++) {
+        int index = prefix[i] - 'a';
+        if (!currentNode->children[index]) {
+            printf("No words found with the given prefix.\n");
+            break;
+        }
+        currentNode = currentNode->children[index];
+    }
+
+    if (i == length) {
+        printf("Autocomplete suggestions for the prefix '%s':\n", prefix);
+        char currentWord[100];
+        autocomplete(currentNode, prefix, currentWord, 0);
+    }
+
+    return 0;
+}
